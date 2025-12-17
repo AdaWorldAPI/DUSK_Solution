@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>DUSK.DemoApp</RootNamespace>
+    <AssemblyName>DUSK.DemoApp</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DUSK.Core\DUSK.Core.csproj" />
+    <ProjectReference Include="..\DUSK.Engine\DUSK.Engine.csproj" />
+    <ProjectReference Include="..\DUSK.UI\DUSK.UI.csproj" />
+    <ProjectReference Include="..\DUSK.Theme\DUSK.Theme.csproj" />
+    <ProjectReference Include="..\DUSK.RuntimeAdapters\DUSK.RuntimeAdapters.csproj" />
+    <ProjectReference Include="..\DUSK.Sync\DUSK.Sync.csproj" />
+    <ProjectReference Include="..\DUSK.Visuals\DUSK.Visuals.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>DUSK.RuntimeAdapters</RootNamespace>
+    <AssemblyName>DUSK.RuntimeAdapters</AssemblyName>
+    <UseWindowsForms>true</UseWindowsForms>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DUSK.Core\DUSK.Core.csproj" />
+    <ProjectReference Include="..\DUSK.Engine\DUSK.Engine.csproj" />
+    <ProjectReference Include="..\DUSK.UI\DUSK.UI.csproj" />
+    <ProjectReference Include="..\DUSK.Theme\DUSK.Theme.csproj" />
+  </ItemGroup>
+</Project>
