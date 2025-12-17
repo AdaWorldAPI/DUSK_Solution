@@ -4,6 +4,8 @@ using System.Diagnostics;
 using DUSK.Core;
 using DUSK.Sync.Providers;
 
+// Note: Call DataPulseMonitor.Instance to enable waveform visualization
+
 /// <summary>
 /// Orchestrates the 3-layer cache system.
 /// Read-through: L1 -> L2 -> L3 -> Source
@@ -41,14 +43,23 @@ public sealed class CacheOrchestrator : ICacheOrchestrator, IDisposable
 
     public async Task<T?> GetAsync<T>(string key, CancellationToken ct = default)
     {
+        var sw = Stopwatch.StartNew();
+
         // Try L1 (Memory)
         var result = await _l1.GetAsync<T>(key, ct);
-        if (result != null) return result;
+        if (result != null)
+        {
+            sw.Stop();
+            DataPulseMonitor.Instance.RecordHit(CacheLayerSource.L1_Memory, key, sw.Elapsed);
+            return result;
+        }
 
         // Try L2 (Redis)
         result = await _l2.GetAsync<T>(key, ct);
         if (result != null)
         {
+            sw.Stop();
+            DataPulseMonitor.Instance.RecordHit(CacheLayerSource.L2_Redis, key, sw.Elapsed);
             // Populate L1
             await _l1.SetAsync(key, result, CacheEntryOptions.ShortLived, ct);
             return result;
@@ -58,6 +69,8 @@ public sealed class CacheOrchestrator : ICacheOrchestrator, IDisposable
         result = await _l3.GetAsync<T>(key, ct);
         if (result != null)
         {
+            sw.Stop();
+            DataPulseMonitor.Instance.RecordHit(CacheLayerSource.L3_MongoDB, key, sw.Elapsed);
             // Populate L1 and L2
             var populateTasks = new[]
             {
@@ -68,12 +81,15 @@ public sealed class CacheOrchestrator : ICacheOrchestrator, IDisposable
             return result;
         }
 
+        sw.Stop();
+        DataPulseMonitor.Instance.RecordMiss(key, sw.Elapsed);
         return default;
     }
 
     public async Task SetAsync<T>(string key, T value, CacheEntryOptions? options = null, CancellationToken ct = default)
     {
         options ??= CacheEntryOptions.Default;
+        var sw = Stopwatch.StartNew();
 
         // Write to all layers based on strategy
         if (_options.WriteStrategy == WriteStrategy.WriteThrough)
@@ -85,15 +101,22 @@ public sealed class CacheOrchestrator : ICacheOrchestrator, IDisposable
                 _l3.SetAsync(key, value, options with { AbsoluteExpiration = _options.L3DefaultTTL }, ct)
             };
             await Task.WhenAll(tasks);
+            sw.Stop();
+            DataPulseMonitor.Instance.RecordWrite(CacheLayerSource.L3_MongoDB, key, sw.Elapsed);
         }
         else // WriteBehind - async to L2/L3
         {
             await _l1.SetAsync(key, value, options with { AbsoluteExpiration = _options.L1DefaultTTL }, ct);
+            sw.Stop();
+            DataPulseMonitor.Instance.RecordWrite(CacheLayerSource.L1_Memory, key, sw.Elapsed);
 
             _ = Task.Run(async () =>
             {
+                var sw2 = Stopwatch.StartNew();
                 await _l2.SetAsync(key, value, options with { AbsoluteExpiration = _options.L2DefaultTTL }, CancellationToken.None);
+                DataPulseMonitor.Instance.RecordWrite(CacheLayerSource.L2_Redis, key, sw2.Elapsed);
                 await _l3.SetAsync(key, value, options with { AbsoluteExpiration = _options.L3DefaultTTL }, CancellationToken.None);
+                DataPulseMonitor.Instance.RecordWrite(CacheLayerSource.L3_MongoDB, key, sw2.Elapsed);
             }, CancellationToken.None);
         }
     }
