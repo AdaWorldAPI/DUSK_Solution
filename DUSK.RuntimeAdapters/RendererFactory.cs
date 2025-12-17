@@ -1,14 +1,16 @@
 namespace DUSK.RuntimeAdapters;
 
+using System.Collections.Concurrent;
 using DUSK.Core;
 
 /// <summary>
 /// Factory for creating platform-specific renderers.
 /// Enables runtime selection of rendering backend.
+/// Thread-safe for concurrent registration and creation.
 /// </summary>
 public static class RendererFactory
 {
-    private static readonly Dictionary<RendererType, Func<IRenderer>> _factories = new();
+    private static readonly ConcurrentDictionary<RendererType, Func<IRenderer>> _factories = new();
     private static RendererType _defaultType = RendererType.Console;
 
     static RendererFactory()
@@ -26,7 +28,7 @@ public static class RendererFactory
 
     public static void Register(RendererType type, Func<IRenderer> factory)
     {
-        _factories[type] = factory;
+        _factories.AddOrUpdate(type, factory, (_, _) => factory);
     }
 
     public static void SetDefault(RendererType type)

@@ -1,17 +1,20 @@
 namespace DUSK.Core.Input;
 
+using System.Collections.Concurrent;
+
 /// <summary>
 /// Manages global hotkeys and key bindings.
 /// Allows registering keyboard shortcuts that trigger actions.
+/// Thread-safe for concurrent registration and key handling.
 /// </summary>
 public sealed class HotkeyManager : IInputHandler, IDisposable
 {
     private static HotkeyManager? _instance;
     private static readonly object Lock = new();
 
-    private readonly Dictionary<HotkeyBinding, HotkeyAction> _hotkeys = new();
-    private readonly Dictionary<string, HotkeyBinding> _namedBindings = new();
-    private bool _enabled = true;
+    private readonly ConcurrentDictionary<HotkeyBinding, HotkeyAction> _hotkeys = new();
+    private readonly ConcurrentDictionary<string, HotkeyBinding> _namedBindings = new();
+    private volatile bool _enabled = true;
     private bool _disposed;
 
     public static HotkeyManager Instance
@@ -51,11 +54,11 @@ public sealed class HotkeyManager : IInputHandler, IDisposable
     public void Register(DuskKey key, KeyModifiers modifiers, Action action, string? name = null)
     {
         var binding = new HotkeyBinding(key, modifiers);
-        _hotkeys[binding] = new HotkeyAction(action, name);
+        _hotkeys.AddOrUpdate(binding, new HotkeyAction(action, name), (_, _) => new HotkeyAction(action, name));
 
         if (!string.IsNullOrEmpty(name))
         {
-            _namedBindings[name] = binding;
+            _namedBindings.AddOrUpdate(name, binding, (_, _) => binding);
         }
     }
 
@@ -65,11 +68,11 @@ public sealed class HotkeyManager : IInputHandler, IDisposable
     public void Register(string hotkeyString, Action action, string? name = null)
     {
         var binding = HotkeyBinding.Parse(hotkeyString);
-        _hotkeys[binding] = new HotkeyAction(action, name);
+        _hotkeys.AddOrUpdate(binding, new HotkeyAction(action, name), (_, _) => new HotkeyAction(action, name));
 
         if (!string.IsNullOrEmpty(name))
         {
-            _namedBindings[name] = binding;
+            _namedBindings.AddOrUpdate(name, binding, (_, _) => binding);
         }
     }
 
@@ -79,11 +82,10 @@ public sealed class HotkeyManager : IInputHandler, IDisposable
     public void Unregister(DuskKey key, KeyModifiers modifiers)
     {
         var binding = new HotkeyBinding(key, modifiers);
-        if (_hotkeys.TryGetValue(binding, out var action) && action.Name != null)
+        if (_hotkeys.TryRemove(binding, out var action) && action.Name != null)
         {
-            _namedBindings.Remove(action.Name);
+            _namedBindings.TryRemove(action.Name, out _);
         }
-        _hotkeys.Remove(binding);
     }
 
     /// <summary>
@@ -91,10 +93,9 @@ public sealed class HotkeyManager : IInputHandler, IDisposable
     /// </summary>
     public void Unregister(string name)
     {
-        if (_namedBindings.TryGetValue(name, out var binding))
+        if (_namedBindings.TryRemove(name, out var binding))
         {
-            _hotkeys.Remove(binding);
-            _namedBindings.Remove(name);
+            _hotkeys.TryRemove(binding, out _);
         }
     }
 

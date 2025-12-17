@@ -1,26 +1,29 @@
 namespace DUSK.Engine;
 
+using System.Collections.Concurrent;
 using DUSK.Core;
 
 /// <summary>
 /// Manages scene lifecycle, navigation, and transitions.
 /// Central orchestrator for the DUSK application flow.
+/// Thread-safe for concurrent scene registration and queries.
 /// </summary>
 public sealed class SceneManager : IDisposable
 {
-    private readonly Dictionary<string, IScene> _scenes = new();
-    private readonly Stack<IScene> _sceneStack = new();
+    private readonly ConcurrentDictionary<string, IScene> _scenes = new();
+    private readonly ConcurrentStack<IScene> _sceneStack = new();
     private readonly IRenderer _renderer;
+    private readonly object _transitionLock = new();
 
-    private IScene? _activeScene;
+    private volatile IScene? _activeScene;
     private IScene? _transitionFromScene;
     private IScene? _transitionToScene;
     private SceneTransitionStrategy? _activeTransition;
-    private bool _disposed;
+    private volatile bool _disposed;
 
     public IScene? ActiveScene => _activeScene;
-    public IReadOnlyCollection<IScene> RegisteredScenes => _scenes.Values;
-    public bool IsTransitioning => _activeTransition != null && !_activeTransition.IsComplete;
+    public IReadOnlyCollection<IScene> RegisteredScenes => _scenes.Values.ToArray();
+    public bool IsTransitioning { get { lock (_transitionLock) return _activeTransition != null && !_activeTransition.IsComplete; } }
 
     public event EventHandler<SceneChangedEventArgs>? SceneChanged;
     public event EventHandler<SceneChangedEventArgs>? TransitionStarted;
@@ -33,10 +36,9 @@ public sealed class SceneManager : IDisposable
 
     public void Register(IScene scene)
     {
-        if (_scenes.ContainsKey(scene.Id))
+        if (!_scenes.TryAdd(scene.Id, scene))
             throw new InvalidOperationException($"Scene with ID '{scene.Id}' is already registered.");
 
-        _scenes[scene.Id] = scene;
         scene.Initialize();
     }
 
@@ -48,9 +50,8 @@ public sealed class SceneManager : IDisposable
 
     public void Unregister(string sceneId)
     {
-        if (_scenes.TryGetValue(sceneId, out var scene))
+        if (_scenes.TryRemove(sceneId, out var scene))
         {
-            _scenes.Remove(sceneId);
             scene.Dispose();
         }
     }
@@ -114,22 +115,21 @@ public sealed class SceneManager : IDisposable
 
     public void Pop(TransitionConfig? transition = null)
     {
-        if (_sceneStack.Count == 0) return;
+        if (!_sceneStack.TryPop(out var previousScene)) return;
 
-        var previousScene = _sceneStack.Pop();
         NavigateTo(previousScene, transition);
     }
 
     public void PopToRoot(TransitionConfig? transition = null)
     {
-        if (_sceneStack.Count == 0) return;
+        if (!_sceneStack.TryPop(out var rootScene)) return;
 
-        IScene rootScene;
-        while (_sceneStack.Count > 1)
+        // Pop all remaining scenes, keeping track of the last one as root
+        while (_sceneStack.TryPop(out var scene))
         {
-            _sceneStack.Pop().Hide();
+            rootScene.Hide();
+            rootScene = scene;
         }
-        rootScene = _sceneStack.Pop();
 
         NavigateTo(rootScene, transition);
     }
