@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>DUSK.Visuals</RootNamespace>
+    <AssemblyName>DUSK.Visuals</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DUSK.Core\DUSK.Core.csproj" />
+    <ProjectReference Include="..\DUSK.Theme\DUSK.Theme.csproj" />
+  </ItemGroup>
+</Project>

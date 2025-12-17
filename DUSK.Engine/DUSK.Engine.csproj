@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>DUSK.Engine</RootNamespace>
+    <AssemblyName>DUSK.Engine</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DUSK.Core\DUSK.Core.csproj" />
+  </ItemGroup>
+</Project>

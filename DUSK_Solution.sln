@@ -1,0 +1,77 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DUSK.Core", "DUSK.Core\DUSK.Core.csproj", "{A1B2C3D4-1111-1111-1111-000000000001}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DUSK.Engine", "DUSK.Engine\DUSK.Engine.csproj", "{A1B2C3D4-2222-2222-2222-000000000002}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DUSK.UI", "DUSK.UI\DUSK.UI.csproj", "{A1B2C3D4-3333-3333-3333-000000000003}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DUSK.Theme", "DUSK.Theme\DUSK.Theme.csproj", "{A1B2C3D4-4444-4444-4444-000000000004}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DUSK.Sync", "DUSK.Sync\DUSK.Sync.csproj", "{A1B2C3D4-5555-5555-5555-000000000005}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DUSK.RuntimeAdapters", "DUSK.RuntimeAdapters\DUSK.RuntimeAdapters.csproj", "{A1B2C3D4-6666-6666-6666-000000000006}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DUSK.Migration", "DUSK.Migration\DUSK.Migration.csproj", "{A1B2C3D4-7777-7777-7777-000000000007}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DUSK.Visuals", "DUSK.Visuals\DUSK.Visuals.csproj", "{A1B2C3D4-8888-8888-8888-000000000008}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DUSK.Studio", "DUSK.Studio\DUSK.Studio.csproj", "{A1B2C3D4-9999-9999-9999-000000000009}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DUSK.DemoApp", "DUSK.DemoApp\DUSK.DemoApp.csproj", "{A1B2C3D4-AAAA-AAAA-AAAA-00000000000A}"
+EndProject
+
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A1B2C3D4-1111-1111-1111-000000000001}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-1111-1111-1111-000000000001}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-1111-1111-1111-000000000001}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-1111-1111-1111-000000000001}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-2222-2222-2222-000000000002}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-2222-2222-2222-000000000002}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-2222-2222-2222-000000000002}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-2222-2222-2222-000000000002}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-3333-3333-3333-000000000003}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-3333-3333-3333-000000000003}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-3333-3333-3333-000000000003}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-3333-3333-3333-000000000003}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-4444-4444-4444-000000000004}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-4444-4444-4444-000000000004}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-4444-4444-4444-000000000004}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-4444-4444-4444-000000000004}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-5555-5555-5555-000000000005}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-5555-5555-5555-000000000005}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-5555-5555-5555-000000000005}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-5555-5555-5555-000000000005}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-6666-6666-6666-000000000006}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-6666-6666-6666-000000000006}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-6666-6666-6666-000000000006}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-6666-6666-6666-000000000006}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-7777-7777-7777-000000000007}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-7777-7777-7777-000000000007}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-7777-7777-7777-000000000007}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-7777-7777-7777-000000000007}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-8888-8888-8888-000000000008}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-8888-8888-8888-000000000008}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-8888-8888-8888-000000000008}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-8888-8888-8888-000000000008}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-9999-9999-9999-000000000009}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-9999-9999-9999-000000000009}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-9999-9999-9999-000000000009}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-9999-9999-9999-000000000009}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-AAAA-AAAA-AAAA-00000000000A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-AAAA-AAAA-AAAA-00000000000A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-AAAA-AAAA-AAAA-00000000000A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-AAAA-AAAA-AAAA-00000000000A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

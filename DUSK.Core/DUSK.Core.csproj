@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>DUSK.Core</RootNamespace>
+    <AssemblyName>DUSK.Core</AssemblyName>
+  </PropertyGroup>
+</Project>
