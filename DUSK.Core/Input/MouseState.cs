@@ -1,48 +1,75 @@
 namespace DUSK.Core.Input;
 
+using System.Collections.Concurrent;
+
 /// <summary>
 /// Tracks the current state of the mouse.
+/// Thread-safe for concurrent access from input and render threads.
 /// </summary>
 public sealed class MouseState
 {
-    private readonly HashSet<MouseButton> _pressedButtons = new();
-    private readonly Dictionary<MouseButton, DateTime> _buttonPressTime = new();
-    private readonly Dictionary<MouseButton, DuskPoint> _buttonPressPosition = new();
+    private readonly ConcurrentDictionary<MouseButton, ButtonState> _buttonStates = new();
+    private DuskPoint _position;
+    private DuskPoint _previousPosition;
+    private int _scrollWheelValue;
+    private int _scrollDelta;
+    private readonly object _positionLock = new();
 
     /// <summary>
     /// Current mouse position.
     /// </summary>
-    public DuskPoint Position { get; set; }
+    public DuskPoint Position
+    {
+        get { lock (_positionLock) return _position; }
+        set { lock (_positionLock) _position = value; }
+    }
 
     /// <summary>
     /// Previous mouse position (from last frame).
     /// </summary>
-    public DuskPoint PreviousPosition { get; private set; }
+    public DuskPoint PreviousPosition
+    {
+        get { lock (_positionLock) return _previousPosition; }
+        private set { lock (_positionLock) _previousPosition = value; }
+    }
 
     /// <summary>
     /// Mouse movement delta since last frame.
     /// </summary>
-    public DuskPoint Delta => new(Position.X - PreviousPosition.X, Position.Y - PreviousPosition.Y);
+    public DuskPoint Delta
+    {
+        get
+        {
+            lock (_positionLock)
+            {
+                return new(_position.X - _previousPosition.X, _position.Y - _previousPosition.Y);
+            }
+        }
+    }
 
     /// <summary>
     /// Current scroll wheel value.
     /// </summary>
-    public int ScrollWheelValue { get; set; }
+    public int ScrollWheelValue
+    {
+        get => Interlocked.CompareExchange(ref _scrollWheelValue, 0, 0);
+        set => Interlocked.Exchange(ref _scrollWheelValue, value);
+    }
 
     /// <summary>
     /// Scroll wheel delta since last frame.
     /// </summary>
-    public int ScrollDelta { get; private set; }
+    public int ScrollDelta => Interlocked.CompareExchange(ref _scrollDelta, 0, 0);
 
     /// <summary>
     /// Check if a mouse button is currently pressed.
     /// </summary>
-    public bool IsButtonDown(MouseButton button) => _pressedButtons.Contains(button);
+    public bool IsButtonDown(MouseButton button) => _buttonStates.ContainsKey(button);
 
     /// <summary>
     /// Check if a mouse button is currently released.
     /// </summary>
-    public bool IsButtonUp(MouseButton button) => !_pressedButtons.Contains(button);
+    public bool IsButtonUp(MouseButton button) => !_buttonStates.ContainsKey(button);
 
     /// <summary>
     /// Check if left button is pressed.
@@ -64,9 +91,9 @@ public sealed class MouseState
     /// </summary>
     public TimeSpan GetButtonHoldDuration(MouseButton button)
     {
-        if (_buttonPressTime.TryGetValue(button, out var pressTime))
+        if (_buttonStates.TryGetValue(button, out var state))
         {
-            return DateTime.UtcNow - pressTime;
+            return DateTime.UtcNow - state.PressTime;
         }
         return TimeSpan.Zero;
     }
@@ -76,7 +103,7 @@ public sealed class MouseState
     /// </summary>
     public DuskPoint? GetButtonPressPosition(MouseButton button)
     {
-        return _buttonPressPosition.TryGetValue(button, out var pos) ? pos : null;
+        return _buttonStates.TryGetValue(button, out var state) ? state.PressPosition : null;
     }
 
     /// <summary>
@@ -84,9 +111,10 @@ public sealed class MouseState
     /// </summary>
     public DuskPoint GetDragDelta(MouseButton button)
     {
-        if (_buttonPressPosition.TryGetValue(button, out var pressPos))
+        if (_buttonStates.TryGetValue(button, out var state))
         {
-            return new DuskPoint(Position.X - pressPos.X, Position.Y - pressPos.Y);
+            var pos = Position;
+            return new DuskPoint(pos.X - state.PressPosition.X, pos.Y - state.PressPosition.Y);
         }
         return new DuskPoint(0, 0);
     }
@@ -106,43 +134,47 @@ public sealed class MouseState
     /// </summary>
     public void UpdatePrevious()
     {
-        PreviousPosition = Position;
-        ScrollDelta = 0;
+        lock (_positionLock)
+        {
+            _previousPosition = _position;
+        }
+        Interlocked.Exchange(ref _scrollDelta, 0);
     }
 
     internal void SetButtonDown(MouseButton button)
     {
-        if (_pressedButtons.Add(button))
-        {
-            _buttonPressTime[button] = DateTime.UtcNow;
-            _buttonPressPosition[button] = Position;
-        }
+        var pos = Position;
+        _buttonStates.TryAdd(button, new ButtonState(DateTime.UtcNow, pos));
     }
 
     internal void SetButtonUp(MouseButton button)
     {
-        _pressedButtons.Remove(button);
-        _buttonPressTime.Remove(button);
-        _buttonPressPosition.Remove(button);
+        _buttonStates.TryRemove(button, out _);
     }
 
     internal void SetScrollDelta(int delta)
     {
-        ScrollDelta = delta;
-        ScrollWheelValue += delta;
+        Interlocked.Exchange(ref _scrollDelta, delta);
+        Interlocked.Add(ref _scrollWheelValue, delta);
     }
 
     internal void Clear()
     {
-        _pressedButtons.Clear();
-        _buttonPressTime.Clear();
-        _buttonPressPosition.Clear();
-        Position = new DuskPoint(0, 0);
-        PreviousPosition = new DuskPoint(0, 0);
-        ScrollWheelValue = 0;
-        ScrollDelta = 0;
+        _buttonStates.Clear();
+        lock (_positionLock)
+        {
+            _position = new DuskPoint(0, 0);
+            _previousPosition = new DuskPoint(0, 0);
+        }
+        Interlocked.Exchange(ref _scrollWheelValue, 0);
+        Interlocked.Exchange(ref _scrollDelta, 0);
     }
 }
+
+/// <summary>
+/// Internal state for a pressed button.
+/// </summary>
+internal readonly record struct ButtonState(DateTime PressTime, DuskPoint PressPosition);
 
 /// <summary>
 /// Mouse buttons enumeration.
@@ -180,21 +212,26 @@ public enum CursorStyle
 
 /// <summary>
 /// Manages the mouse cursor appearance.
+/// Thread-safe for concurrent access.
 /// </summary>
 public static class CursorManager
 {
-    private static CursorStyle _currentCursor = CursorStyle.Default;
-    private static readonly Stack<CursorStyle> CursorStack = new();
+    private static volatile CursorStyle _currentCursor = CursorStyle.Default;
+    private static readonly ConcurrentStack<CursorStyle> CursorStack = new();
+    private static readonly object _lock = new();
 
     public static CursorStyle CurrentCursor
     {
         get => _currentCursor;
         set
         {
-            if (_currentCursor != value)
+            lock (_lock)
             {
-                _currentCursor = value;
-                CursorChanged?.Invoke(null, value);
+                if (_currentCursor != value)
+                {
+                    _currentCursor = value;
+                    CursorChanged?.Invoke(null, value);
+                }
             }
         }
     }
@@ -206,8 +243,12 @@ public static class CursorManager
     /// </summary>
     public static void PushCursor(CursorStyle cursor)
     {
-        CursorStack.Push(_currentCursor);
-        CurrentCursor = cursor;
+        lock (_lock)
+        {
+            CursorStack.Push(_currentCursor);
+            _currentCursor = cursor;
+            CursorChanged?.Invoke(null, cursor);
+        }
     }
 
     /// <summary>
@@ -215,9 +256,13 @@ public static class CursorManager
     /// </summary>
     public static void PopCursor()
     {
-        if (CursorStack.Count > 0)
+        lock (_lock)
         {
-            CurrentCursor = CursorStack.Pop();
+            if (CursorStack.TryPop(out var previous))
+            {
+                _currentCursor = previous;
+                CursorChanged?.Invoke(null, previous);
+            }
         }
     }
 
@@ -226,7 +271,11 @@ public static class CursorManager
     /// </summary>
     public static void ResetCursor()
     {
-        CursorStack.Clear();
-        CurrentCursor = CursorStyle.Default;
+        lock (_lock)
+        {
+            CursorStack.Clear();
+            _currentCursor = CursorStyle.Default;
+            CursorChanged?.Invoke(null, CursorStyle.Default);
+        }
     }
 }

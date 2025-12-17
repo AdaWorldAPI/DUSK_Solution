@@ -1,59 +1,67 @@
 namespace DUSK.Core.Input;
 
+using System.Collections.Concurrent;
+
 /// <summary>
 /// Tracks the current state of keyboard keys.
+/// Thread-safe for concurrent access from input and render threads.
 /// </summary>
 public sealed class KeyboardState
 {
-    private readonly HashSet<DuskKey> _pressedKeys = new();
-    private readonly Dictionary<DuskKey, DateTime> _keyPressTime = new();
+    private readonly ConcurrentDictionary<DuskKey, DateTime> _pressedKeys = new();
+    private volatile KeyModifiers _modifiers;
+    private readonly object _lock = new();
 
     /// <summary>
     /// Current modifier keys state.
     /// </summary>
-    public KeyModifiers Modifiers { get; set; }
+    public KeyModifiers Modifiers
+    {
+        get => _modifiers;
+        set => _modifiers = value;
+    }
 
     /// <summary>
     /// Check if a key is currently pressed.
     /// </summary>
-    public bool IsKeyDown(DuskKey key) => _pressedKeys.Contains(key);
+    public bool IsKeyDown(DuskKey key) => _pressedKeys.ContainsKey(key);
 
     /// <summary>
     /// Check if a key is currently released.
     /// </summary>
-    public bool IsKeyUp(DuskKey key) => !_pressedKeys.Contains(key);
+    public bool IsKeyUp(DuskKey key) => !_pressedKeys.ContainsKey(key);
 
     /// <summary>
     /// Get all currently pressed keys.
     /// </summary>
-    public IReadOnlySet<DuskKey> PressedKeys => _pressedKeys;
+    public IReadOnlyCollection<DuskKey> PressedKeys => _pressedKeys.Keys.ToArray();
 
     /// <summary>
     /// Check if Shift modifier is active.
     /// </summary>
-    public bool IsShiftDown => Modifiers.HasFlag(KeyModifiers.Shift);
+    public bool IsShiftDown => _modifiers.HasFlag(KeyModifiers.Shift);
 
     /// <summary>
     /// Check if Control modifier is active.
     /// </summary>
-    public bool IsControlDown => Modifiers.HasFlag(KeyModifiers.Control);
+    public bool IsControlDown => _modifiers.HasFlag(KeyModifiers.Control);
 
     /// <summary>
     /// Check if Alt modifier is active.
     /// </summary>
-    public bool IsAltDown => Modifiers.HasFlag(KeyModifiers.Alt);
+    public bool IsAltDown => _modifiers.HasFlag(KeyModifiers.Alt);
 
     /// <summary>
     /// Check if any modifier is active.
     /// </summary>
-    public bool HasModifiers => Modifiers != KeyModifiers.None;
+    public bool HasModifiers => _modifiers != KeyModifiers.None;
 
     /// <summary>
     /// Get how long a key has been held down.
     /// </summary>
     public TimeSpan GetKeyHoldDuration(DuskKey key)
     {
-        if (_keyPressTime.TryGetValue(key, out var pressTime))
+        if (_pressedKeys.TryGetValue(key, out var pressTime))
         {
             return DateTime.UtcNow - pressTime;
         }
@@ -62,23 +70,18 @@ public sealed class KeyboardState
 
     internal void SetKeyDown(DuskKey key)
     {
-        if (_pressedKeys.Add(key))
-        {
-            _keyPressTime[key] = DateTime.UtcNow;
-        }
+        _pressedKeys.TryAdd(key, DateTime.UtcNow);
     }
 
     internal void SetKeyUp(DuskKey key)
     {
-        _pressedKeys.Remove(key);
-        _keyPressTime.Remove(key);
+        _pressedKeys.TryRemove(key, out _);
     }
 
     internal void Clear()
     {
         _pressedKeys.Clear();
-        _keyPressTime.Clear();
-        Modifiers = KeyModifiers.None;
+        _modifiers = KeyModifiers.None;
     }
 }
 

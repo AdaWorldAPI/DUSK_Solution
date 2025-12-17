@@ -23,6 +23,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DUSK.Studio", "DUSK.Studio\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DUSK.DemoApp", "DUSK.DemoApp\DUSK.DemoApp.csproj", "{A1B2C3D4-AAAA-AAAA-AAAA-00000000000A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DUSK.Prediction", "DUSK.Prediction\DUSK.Prediction.csproj", "{A1B2C3D4-BBBB-BBBB-BBBB-00000000000B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DUSK.Contracts", "DUSK.Contracts\DUSK.Contracts.csproj", "{A1B2C3D4-CCCC-CCCC-CCCC-00000000000C}"
+EndProject
 
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -70,6 +74,14 @@ Global
 		{A1B2C3D4-AAAA-AAAA-AAAA-00000000000A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1B2C3D4-AAAA-AAAA-AAAA-00000000000A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1B2C3D4-AAAA-AAAA-AAAA-00000000000A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-BBBB-BBBB-BBBB-00000000000B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-BBBB-BBBB-BBBB-00000000000B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-BBBB-BBBB-BBBB-00000000000B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-BBBB-BBBB-BBBB-00000000000B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-CCCC-CCCC-CCCC-00000000000C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-CCCC-CCCC-CCCC-00000000000C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-CCCC-CCCC-CCCC-00000000000C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-CCCC-CCCC-CCCC-00000000000C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
